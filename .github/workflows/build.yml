@@ -1,0 +1,30 @@
+name: Build MongoDbQueueService
+
+on: 
+  push: 
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Building the solution
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v2
+        with: 
+          dotnet-version: 6.0.x
+
+      - name: Install dependencies
+        run: donet restore MongoDbQueueService.sln
+
+      - name: Build
+        run: donet build MongoDbQueueService.sln --configuration Release --no-restore
+
+      - name: Tests
+        run: dotnet test MongoDbQueueService.sln --no-restore --verbosity normal
+      
+
+      -
