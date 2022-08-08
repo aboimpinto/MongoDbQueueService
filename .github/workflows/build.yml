@@ -18,10 +18,10 @@ jobs:
           dotnet-version: 6.0.x
 
       - name: Install dependencies
-        run: donet restore MongoDbQueueService.sln
+        run: dotnet restore MongoDbQueueService.sln
 
       - name: Build
-        run: donet build MongoDbQueueService.sln --configuration Release --no-restore
+        run: dotnet build MongoDbQueueService.sln --configuration Release --no-restore
 
       - name: Tests
         run: dotnet test MongoDbQueueService.sln --no-restore --verbosity normal
