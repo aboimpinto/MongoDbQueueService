@@ -25,6 +25,3 @@ jobs:
 
       - name: Tests
         run: dotnet test MongoDbQueueService.sln --no-restore --verbosity normal
-      
-
-      -
