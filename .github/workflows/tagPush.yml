@@ -21,8 +21,9 @@ jobs:
       - name: Install dependencies
         run: dotnet restore MongoDbQueueService.sln
 
-      - name: Cretae nuget package
+      - name: Create nuget package
         run: dotnet pack --configuration Release
+                /p:NuGetVersion=6.0.x
                 /p:Version=${{ github.event.release.tag_name }}
                 /p:PackageReleaseNotes="See http://github.com/AboimPinto/MongoDbQueueService/releases/tag/${{ github.event.release.tag_name }}" 
       
