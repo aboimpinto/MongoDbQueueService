@@ -21,8 +21,21 @@ jobs:
       - name: Install dependencies
         run: dotnet restore MongoDbQueueService.sln
 
-      - name: Build
-        run: dotnet build MongoDbQueueService.sln --configuration Release --no-restore
+      - name: Cretae nuget package
+        run: dotnet pack --configuration Release
+                /p:Version=${{ github.event.release.tag_name }}
+                /p:PackageReleaseNotes="See http://github.com/AboimPinto/MongoDbQueueService/releases/tag/${{ github.event.release.tag_name }}" 
+      
+      - name: Archive nuget package
+        uses: actions/upload-artifact@v3
+        with: 
+          name: MongoDbQueueService
+          path: ./MongoDbQueueService/bin/Release/MongoDbQueueService.${{ github.event.release.tag_name }}.nupkg
 
-      - name: Tests
-        run: dotnet test MongoDbQueueService.sln --no-restore --verbosity normal
+      - name: Publish nuget package
+        run: dotnet nuget push ./MongoDbQueueService/bin/Release/MongoDbQueueService.${{ github.event.release.tag_name }}.nupkg
+              --api-key ${{ secrets.MONGO_DB_QUEUE_SERVICE_KEY }}
+              --source https://api.nuget.org/v3/index.json
+              --no-symbols true
+
+      
