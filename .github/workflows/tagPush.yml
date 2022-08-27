@@ -24,7 +24,7 @@ jobs:
       - name: Create nuget package
         run: dotnet pack --configuration Release
                 /p:NuGetVersion=6.0.x
-                /p:AssemblyVersion=${{ github.event.release.tag_name }}
+                /p:AssemblyVersion=${{ github.ref }}
                 /p:Version=${{ github.event.release.tag_name }}
                 /p:PackageReleaseNotes="See http://github.com/AboimPinto/MongoDbQueueService/releases/tag/${{ github.event.release.tag_name }}" 
       
