@@ -32,7 +32,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with: 
           name: MongoDbQueueService
-          path: /home/runner/work/MongoDbQueueService/MongoDbQueueService/bin/Release/MongoDbQueueService.${{ github.ref_name }}.nupkg
+          path: ./MongoDbQueueService/bin/Release/MongoDbQueueService.${{ github.ref_name }}.nupkg
 
       - name: Publish nuget package
         run: dotnet nuget push /home/runner/work/MongoDbQueueService/MongoDbQueueService/bin/Release/MongoDbQueueService.${{ github.ref_name }}.nupkg
