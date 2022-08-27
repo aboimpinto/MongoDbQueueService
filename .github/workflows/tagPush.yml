@@ -38,6 +38,7 @@ jobs:
         run: dotnet nuget push ./MongoDbQueueService/bin/Release/MongoDbQueueService.${{ github.ref_name }}.nupkg
               --api-key ${{ secrets.MONGO_DB_QUEUE_SERVICE_KEY }}
               --source https://api.nuget.org/v3/index.json
-              --no-symbols true
+              --no-symbols
+              --skip-duplicate
 
       
