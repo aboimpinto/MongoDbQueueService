@@ -3,12 +3,17 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <UpdateAssemblyInfo>false</UpdateAssemblyInfo>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   
   <ItemGroup>
     <None Include="LICENSE" Pack="true" PackagePath=""/>
   </ItemGroup>  
   
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath=""/>
+</ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="MongoDB.Bson" Version="*" />
     <PackageReference Include="MongoDB.Driver" Version="*" />
