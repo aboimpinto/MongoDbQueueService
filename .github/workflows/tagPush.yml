@@ -32,10 +32,10 @@ jobs:
         uses: actions/upload-artifact@v3
         with: 
           name: MongoDbQueueService
-          path: ./MongoDbQueueService/bin/Release/MongoDbQueueService.${{ github.ref_name }}.nupkg
+          path: /home/runner/work/MongoDbQueueService/MongoDbQueueService/bin/Release/MongoDbQueueService.${{ github.ref_name }}.nupkg
 
       - name: Publish nuget package
-        run: dotnet nuget push ./MongoDbQueueService/bin/Release/MongoDbQueueService.${{ github.ref_name }}.nupkg
+        run: dotnet nuget push /home/runner/work/MongoDbQueueService/MongoDbQueueService/bin/Release/MongoDbQueueService.${{ github.ref_name }}.nupkg
               --api-key ${{ secrets.MONGO_DB_QUEUE_SERVICE_KEY }}
               --source https://api.nuget.org/v3/index.json
               --no-symbols true
