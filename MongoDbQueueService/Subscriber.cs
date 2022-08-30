@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization;
+using MongoDB.Bson;
 
 namespace MongoDbQueueService
 {
@@ -63,13 +64,10 @@ namespace MongoDbQueueService
                         {
                             try
                             {
-                                // item.OnNext(JsonSerializer.Deserialize<T>(itemFromQueue.Payload.ToString()));
-                                // var json = itemFromQueue.Payload.ToJson();
-
-                                // var deserializedPayload = BsonSerializer.Deserialize<T>(itemFromQueue.Payload);
-                                // item.OnNext(deserializedPayload);
-
-                                // item.OnNext(itemFromQueue.Payload);
+                                var jsonFromDocument = itemFromQueue.Payload.ToJson();
+                                var deserializedObject = JsonSerializer.Deserialize<T>(jsonFromDocument);
+                                item.OnNext(deserializedObject);
+                                
                                 if (this._deleteOnAcknowledge)
                                 {
                                     await this.AcknowledgeAndDelete().ConfigureAwait(false);
