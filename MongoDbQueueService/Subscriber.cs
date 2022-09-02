@@ -5,26 +5,55 @@ using System.Reactive.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
-using MongoDB.Bson.Serialization;
 using MongoDB.Bson;
+using System.IO;
+using MongoDbQueueService.Configuration;
 
 namespace MongoDbQueueService
 {
     public class Subscriber : ISubscriber
     {
-        private readonly string _workerName;
-        private readonly bool _deleteOnAcknowledge;
+        private string _workerName;
+        private bool _deleteOnAcknowledge;
         private IMongoDatabase _database;
         private IMongoCollection<QueueCollection> _queueCollection;
 
+        public Subscriber()
+        {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .Build();
+
+            var subscriberSettings = new SubscriberSettings();
+            configuration.Bind("SubscriberSettings", subscriberSettings);
+
+            this.ConnectDatabase(
+                subscriberSettings.ConnectionString,
+                subscriberSettings.Database,
+                subscriberSettings.Queue,
+                subscriberSettings.WorkerName);
+        }
+
+        public Subscriber(SubscriberSettings settings)
+        {
+            this.ConnectDatabase(
+                settings.ConnectionString,
+                settings.Database,
+                settings.Queue,
+                settings.WorkerName);
+        }
+
         public Subscriber(string url, string database, string collection, string workerName, bool deleteOnAcknowledge = false)
         {
-            var client = new MongoClient(url);
-            this._database = client.GetDatabase(database);
-            this._queueCollection = this._database.GetCollection<QueueCollection>(collection);
-            this._workerName = workerName;
-            this._deleteOnAcknowledge = deleteOnAcknowledge;
+            this.ConnectDatabase(
+                url,
+                database,
+                collection,
+                workerName,
+                deleteOnAcknowledge);
         }
 
         public IObservable<T> SubscribeQueueCollection<T>(CancellationToken token)
@@ -88,6 +117,20 @@ namespace MongoDbQueueService
 
                 return Disposable.Empty;
             });
+        }
+
+        private void ConnectDatabase(
+            string url, 
+            string database, 
+            string collection, 
+            string workerName, 
+            bool deleteOnAcknowledge = false)
+        {
+            var client = new MongoClient(url);
+            this._database = client.GetDatabase(database);
+            this._queueCollection = this._database.GetCollection<QueueCollection>(collection);
+            this._workerName = workerName;
+            this._deleteOnAcknowledge = deleteOnAcknowledge;
         }
 
         private async Task AcknowledgeAndDelete()

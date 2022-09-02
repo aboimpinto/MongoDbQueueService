@@ -20,5 +20,6 @@
     <PackageReference Include="System.Reactive.Linq" Version="*" />
     <PackageReference Include="System.Text.Json" Version="6.0.5" />
     <PackageReference Include="System.Threading" Version="4.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="*" />
   </ItemGroup>
 </Project>

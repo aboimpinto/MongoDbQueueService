@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MongoDbQueueService", "Mong
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkerUtilitiesService", "WorkerUtilitiesService\WorkerUtilitiesService.csproj", "{CF23BDDF-9598-4623-829D-02E5E3430A0F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MongoDbQueueService.TestBed", "MongoDbQueueService.TestBed\MongoDbQueueService.TestBed.csproj", "{9444D11F-1859-4A58-8FB6-7C97BDB80E27}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{CF23BDDF-9598-4623-829D-02E5E3430A0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF23BDDF-9598-4623-829D-02E5E3430A0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF23BDDF-9598-4623-829D-02E5E3430A0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9444D11F-1859-4A58-8FB6-7C97BDB80E27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9444D11F-1859-4A58-8FB6-7C97BDB80E27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9444D11F-1859-4A58-8FB6-7C97BDB80E27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9444D11F-1859-4A58-8FB6-7C97BDB80E27}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
