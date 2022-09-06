@@ -5,6 +5,6 @@ namespace MongoDbQueueService
 {
     public interface ISubscriber
     {
-        IObservable<T> SubscribeQueueCollection<T>(CancellationToken token);
+        IObservable<SubscriptionResult<T>> SubscribeQueueCollection<T>(CancellationToken token);
     }
 }

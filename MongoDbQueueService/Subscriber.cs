@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -8,7 +9,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using MongoDB.Bson;
-using System.IO;
 using MongoDbQueueService.Configuration;
 
 namespace MongoDbQueueService
@@ -56,18 +56,24 @@ namespace MongoDbQueueService
                 deleteOnAcknowledge);
         }
 
-        public IObservable<T> SubscribeQueueCollection<T>(CancellationToken token)
+        public IObservable<SubscriptionResult<T>> SubscribeQueueCollection<T>(CancellationToken token)
         {
             var scheduleInstance = ThreadPoolScheduler.Instance;
 
-            return Observable.Create<T>(item =>
+            return Observable.Create<SubscriptionResult<T>>(item =>
             {
                 var disposable = Observable
                     .Interval(TimeSpan.FromSeconds(1), scheduleInstance)
                     .Subscribe(async _ => 
                     {
+                        var sortOptions = Builders<QueueCollection>.Sort.Ascending("LastTimeChanged");
+                        var sort = new FindOptions<QueueCollection>
+                        {
+                            Sort = sortOptions
+                        };
+
                         var itemProcessingForWorker = await this._queueCollection
-                            .FindAsync(x => x.WorkerName == this._workerName)
+                            .FindAsync(x => x.WorkerName == this._workerName, sort)
                             .Result
                             .SingleOrDefaultAsync();
 
@@ -95,15 +101,34 @@ namespace MongoDbQueueService
                             {
                                 var jsonFromDocument = itemFromQueue.Payload.ToJson();
                                 var deserializedObject = JsonSerializer.Deserialize<T>(jsonFromDocument);
-                                item.OnNext(deserializedObject);
+
+                                var subscriptionResult = new SubscriptionResult<T>();
+                                subscriptionResult.ProcessSucessful = false;
+                                subscriptionResult.Payload = deserializedObject;
+
+                                item.OnNext(subscriptionResult);
                                 
-                                if (this._deleteOnAcknowledge)
+                                if (subscriptionResult.ProcessSucessful)
                                 {
-                                    await this.AcknowledgeAndDelete().ConfigureAwait(false);
+                                    if (this._deleteOnAcknowledge)
+                                    {
+                                        await this.AcknowledgeAndDelete()
+                                            .ConfigureAwait(false);
+                                    }
+                                    else
+                                    {
+                                        await this.AcknowledgeWithoutDelete(
+                                                JsonSerializer.Serialize<T>(subscriptionResult.Payload), 
+                                                subscriptionResult.ProcessSucessful)
+                                            .ConfigureAwait(false);    
+                                    }
                                 }
-                                else
+                                else 
                                 {
-                                    await this.AcknowledgeWithoutDelete().ConfigureAwait(false);    
+                                    await this.AcknowledgeWithoutDelete(
+                                            JsonSerializer.Serialize<T>(subscriptionResult.Payload), 
+                                            subscriptionResult.ProcessSucessful)
+                                        .ConfigureAwait(false);
                                 }
                             }
                             catch
@@ -152,7 +177,7 @@ namespace MongoDbQueueService
                 .ConfigureAwait(false);
         }
 
-        private async Task AcknowledgeWithoutDelete()
+        private async Task AcknowledgeWithoutDelete(string payload, bool processedSuccessful)
         {
             var filter = Builders<QueueCollection>.Filter.Eq(x => x.WorkerName, this._workerName);
             var item = await this._queueCollection
@@ -171,7 +196,9 @@ namespace MongoDbQueueService
 
             var update = Builders<QueueCollection>.Update
                 .Set(x => x.WorkerName, string.Empty)
-                .Set(x => x.Processed, true);
+                .Set(x => x.Processed, processedSuccessful)
+                .Set(x => x.LastTimeChanged, DateTime.UtcNow)
+                .Set(x => x.Payload, BsonDocument.Parse(payload));
 
             await this._queueCollection
                 .UpdateOneAsync(filter, update)
