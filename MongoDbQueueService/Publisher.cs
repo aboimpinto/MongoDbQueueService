@@ -58,7 +58,7 @@ namespace MongoDbQueueService
             var item = new QueueCollection
             {
                 Payload = BsonDocument.Parse(payload),
-                LastTimeChanged = DateTime.Now,
+                LastTimeChanged = DateTime.UtcNow,
                 Priority = priority,
                 WorkerName = string.Empty,
                 Processed = false

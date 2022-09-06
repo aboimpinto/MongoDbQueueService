@@ -66,7 +66,9 @@ namespace MongoDbQueueService
                     .Interval(TimeSpan.FromSeconds(1), scheduleInstance)
                     .Subscribe(async _ => 
                     {
-                        var sortOptions = Builders<QueueCollection>.Sort.Ascending("LastTimeChanged");
+                        var sortOptions = Builders<QueueCollection>
+                            .Sort.Ascending("LastTimeChanged");
+
                         var sort = new FindOptions<QueueCollection>
                         {
                             Sort = sortOptions
