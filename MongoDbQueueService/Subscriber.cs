@@ -18,6 +18,7 @@ namespace MongoDbQueueService
         private string _workerName;
         private bool _deleteOnAcknowledge;
         private IMongoDatabase _database;
+        private string _collection;
         private IMongoCollection<QueueCollection> _queueCollection;
 
         public Subscriber()
@@ -89,8 +90,14 @@ namespace MongoDbQueueService
                             Builders<QueueCollection>.Filter.Eq(x => x.WorkerName, string.Empty),
                             Builders<QueueCollection>.Filter.Eq(x => x.Processed, false)
                         );
-                        var update = Builders<QueueCollection>.Update.Set(x => x.WorkerName, this._workerName);
-                        var result = await this._queueCollection.UpdateOneAsync(filter, update);
+
+                        this._queueCollection.Aggregate()
+                            .Match(filter)
+                            .Sort(sortOptions)
+                            .Limit(1)
+                            .AppendStage<QueueCollection>(string.Format("{{ $set: {{ 'WorkerName': '{0}' }} }}", this._workerName))
+                            .AppendStage<QueueCollection>(string.Format("{{ $merge: '{0}' }}", this._collection))
+                            .ToList();
 
                         var itemFromQueue = await this._queueCollection
                             .FindAsync(x => x.WorkerName == this._workerName)
@@ -155,9 +162,11 @@ namespace MongoDbQueueService
         {
             var client = new MongoClient(url);
             this._database = client.GetDatabase(database);
-            this._queueCollection = this._database.GetCollection<QueueCollection>(collection);
+            this._collection = collection;
             this._workerName = workerName;
             this._deleteOnAcknowledge = deleteOnAcknowledge;
+
+            this._queueCollection = this._database.GetCollection<QueueCollection>(collection);
         }
 
         private async Task AcknowledgeAndDelete()
