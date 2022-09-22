@@ -44,3 +44,13 @@ This section describes the connection string to the MongoDb and the follow up qu
     "queue": "Queue2Publish" 
 }
 ```
+
+## Subscriber
+
+## Publisher
+Publish a message to a specific queue. Instaciate the Publisher can be done in three ways:
+
+* Publish();
+* Publish(PublisherSettings settings);
+* Publish(string url, string database, string collection);
+

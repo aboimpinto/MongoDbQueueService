@@ -4,6 +4,7 @@
     <UpdateAssemblyInfo>false</UpdateAssemblyInfo>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/aboimpinto/MongoDbQueueService</RepositoryUrl>
   </PropertyGroup>
   
   <ItemGroup>
