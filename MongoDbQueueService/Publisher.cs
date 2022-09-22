@@ -18,8 +18,14 @@ namespace MongoDbQueueService
 
         public Publisher()
         {
+            var settingsFolder = "/settings";
+
+            #if DEBUG
+            settingsFolder = Directory.GetCurrentDirectory();
+            #endif 
+
             var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+                .SetBasePath(settingsFolder)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
                 .Build();
 
