@@ -16,13 +16,14 @@ namespace MongoDbQueueService
         private IMongoCollection<QueueCollection> _queueCollection;
         private Semaphore _openConnectionSemaphore;
 
-        public Publisher()
+        public Publisher(bool debug = false)
         {
             var settingsFolder = "/settings";
 
-            #if DEBUG
-            settingsFolder = Directory.GetCurrentDirectory();
-            #endif 
+            if (debug)
+            {
+                settingsFolder = Directory.GetCurrentDirectory();
+            }
 
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(settingsFolder)
