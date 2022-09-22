@@ -31,7 +31,7 @@ namespace MongoDbQueueService
                 .Build();
 
             var publishSettings = new PublisherSettings();
-            configuration.Bind("PublisherSettings", publishSettings);
+            configuration.Bind("publisherSettings", publishSettings);
 
             this.ConnectDatabase(
                 publishSettings.ConnectionString,
