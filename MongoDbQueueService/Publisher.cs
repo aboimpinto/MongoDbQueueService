@@ -22,7 +22,10 @@ namespace MongoDbQueueService
 
             if (debug)
             {
+                Console.WriteLine("--> DEBUG ON");
                 settingsFolder = Directory.GetCurrentDirectory();
+
+                Console.WriteLine($"--> settingFolder: {settingsFolder}");
             }
 
             var configuration = new ConfigurationBuilder()
@@ -32,6 +35,13 @@ namespace MongoDbQueueService
 
             var publishSettings = new PublisherSettings();
             configuration.Bind("publisherSettings", publishSettings);
+
+            if (debug)
+            {
+                Console.WriteLine($"--> connectionString: {publishSettings.ConnectionString}");
+                Console.WriteLine($"--> database: {publishSettings.Database}");
+                Console.WriteLine($"--> queue: {publishSettings.Queue}");
+            }
 
             this.ConnectDatabase(
                 publishSettings.ConnectionString,

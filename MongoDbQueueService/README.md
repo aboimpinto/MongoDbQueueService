@@ -50,7 +50,10 @@ This section describes the connection string to the MongoDb and the follow up qu
 ## Publisher
 Publish a message to a specific queue. Instaciate the Publisher can be done in three ways:
 
-* Publish();
+* Publish(debug = false);
 * Publish(PublisherSettings settings);
 * Publish(string url, string database, string collection);
 
+Using the parameter less will use configuration stored in the ```appsettings.json```. Providing ```debug``` parameter signal the Publisher to look for the file in the same folder the binary (debug = true) or in the folder /settings (debug = false).
+
+This lib assumes that will run in the container enviroment.
