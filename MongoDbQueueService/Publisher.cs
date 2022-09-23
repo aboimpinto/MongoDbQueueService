@@ -43,6 +43,19 @@ namespace MongoDbQueueService
                 Console.WriteLine($"--> queue: {publishSettings.Queue}");
             }
 
+            if (
+                string.IsNullOrEmpty(publishSettings.ConnectionString) || 
+                string.IsNullOrEmpty(publishSettings.Database) || 
+                string.IsNullOrEmpty(publishSettings.Queue))
+            {
+                Console.WriteLine("Could not read properly the configuration file");
+                Console.WriteLine("=====================================================");
+                Console.WriteLine($"settingFolder -> {settingsFolder}");
+
+                var settingFile = Path.Combine(settingsFolder, "appsettings.json");
+                Console.WriteLine($"settingsFile exists: {File.Exists(settingFile)}");
+            }
+
             this.ConnectDatabase(
                 publishSettings.ConnectionString,
                 publishSettings.Database,
