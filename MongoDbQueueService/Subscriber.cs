@@ -21,15 +21,49 @@ namespace MongoDbQueueService
         private string _collection;
         private IMongoCollection<QueueCollection> _queueCollection;
 
-        public Subscriber()
+        public Subscriber(bool debug = false)
         {
+            var settingsFolder = "/settings";
+
+            if (debug)
+            {
+                Console.WriteLine("--> DEBUG ON");
+                settingsFolder = Directory.GetCurrentDirectory();
+
+                Console.WriteLine($"--> settingFolder: {settingsFolder}");
+            }
+
             var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+                .SetBasePath(settingsFolder)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
                 .Build();
 
             var subscriberSettings = new SubscriberSettings();
             configuration.Bind("SubscriberSettings", subscriberSettings);
+
+            if (debug)
+            {
+                Console.WriteLine($"--> connectionString: {subscriberSettings.ConnectionString}");
+                Console.WriteLine($"--> database: {subscriberSettings.Database}");
+                Console.WriteLine($"--> queue: {subscriberSettings.Queue}");
+                Console.WriteLine($"--> worker: {subscriberSettings.WorkerName}");
+            }
+
+            if (
+                string.IsNullOrEmpty(subscriberSettings.ConnectionString) || 
+                string.IsNullOrEmpty(subscriberSettings.Database) || 
+                string.IsNullOrEmpty(subscriberSettings.Queue) ||
+                string.IsNullOrEmpty(subscriberSettings.WorkerName))
+            {
+                Console.WriteLine("Could not read properly the configuration file");
+                Console.WriteLine("=====================================================");
+                Console.WriteLine($"settingFolder -> {settingsFolder}");
+
+                var settingFile = Path.Combine(settingsFolder, "appsettings.json");
+                Console.WriteLine($"settingsFile exists: {File.Exists(settingFile)}");
+
+                throw new InvalidOperationException("Something wrong wih the configuration file");
+            }
 
             this.ConnectDatabase(
                 subscriberSettings.ConnectionString,
