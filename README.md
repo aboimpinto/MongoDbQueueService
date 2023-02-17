@@ -16,7 +16,7 @@ There are two available packages:
 
 ## MongoDbQueueService
 
-Service responsible to Publish and Subscribe messages into a queue. 
+Service responsible to Publish and Subscribe messages into a queue. This service was tested with collections with 2M records and we can see a little degradation when retrieve the next message in the queue. Indexes in the fields, WorkerName, LastTimeChanged and Processed were added to the collection in the Publisher and Subcriber.
 
 
 ## WorkerUtilitiesService
