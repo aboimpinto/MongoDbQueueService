@@ -17,6 +17,7 @@ namespace MongoDbQueueService
     {
         private string _workerName;
         private bool _deleteOnAcknowledge;
+        private MongoClient _mongoClient;
         private IMongoDatabase _database;
         private string _collection;
         private IMongoCollection<QueueCollection> _queueCollection;
@@ -43,10 +44,10 @@ namespace MongoDbQueueService
 
             if (debug)
             {
-                Console.WriteLine($"--> connectionString: {subscriberSettings.ConnectionString}");
-                Console.WriteLine($"--> database: {subscriberSettings.Database}");
-                Console.WriteLine($"--> queue: {subscriberSettings.Queue}");
-                Console.WriteLine($"--> worker: {subscriberSettings.WorkerName}");
+                Console.WriteLine($"--> Subscriber: connectionString: {subscriberSettings.ConnectionString}");
+                Console.WriteLine($"--> Subscriber: database: {subscriberSettings.Database}");
+                Console.WriteLine($"--> Subscriber: queue: {subscriberSettings.Queue}");
+                Console.WriteLine($"--> Subscriber: worker: {subscriberSettings.WorkerName}");
             }
 
             if (
@@ -125,61 +126,75 @@ namespace MongoDbQueueService
                             Builders<QueueCollection>.Filter.Eq(x => x.Processed, false)
                         );
 
-                        this._queueCollection.Aggregate()
-                            .Match(filter)
-                            .Sort(sortOptions)
-                            .Limit(1)
-                            .AppendStage<QueueCollection>(string.Format("{{ $set: {{ 'WorkerName': '{0}' }} }}", this._workerName))
-                            .AppendStage<QueueCollection>(string.Format("{{ $merge: '{0}' }}", this._collection))
-                            .ToList();
 
-                        var itemFromQueue = await this._queueCollection
-                            .FindAsync(x => x.WorkerName == this._workerName)
-                            .Result
-                            .SingleOrDefaultAsync();
+                        QueueCollection itemFromQueue;
 
-                        if (itemFromQueue != null)
+                        try
                         {
-                            try
+                            var options = new FindOneAndUpdateOptions<QueueCollection>
                             {
-                                var jsonFromDocument = itemFromQueue.Payload.ToJson();
-                                var deserializedObject = JsonSerializer.Deserialize<T>(jsonFromDocument);
+                                Sort = sortOptions, 
+                                ReturnDocument = ReturnDocument.After,
+                                Projection = Builders<QueueCollection>.Projection.Include(x => x.Id)
+                            };
 
-                                var subscriptionResult = new SubscriptionResult<T>();
-                                subscriptionResult.ProcessSucessful = false;
-                                subscriptionResult.Payload = deserializedObject;
+                            var update = Builders<QueueCollection>.Update.Set(x => x.WorkerName, this._workerName);
 
-                                item.OnNext(subscriptionResult);
-                                
-                                if (subscriptionResult.ProcessSucessful)
+                            var updateResult = await this._queueCollection.FindOneAndUpdateAsync(
+                                filter, 
+                                update, 
+                                options);
+
+                            if (updateResult == null)
+                            {
+                                return;
+                            }
+
+                             itemFromQueue = updateResult;
+                        }
+                        catch
+                        {
+                            return;
+                        }
+
+                        try
+                        {
+                            var jsonFromDocument = itemFromQueue.Payload.ToJson();
+                            var deserializedObject = JsonSerializer.Deserialize<T>(jsonFromDocument);
+
+                            var subscriptionResult = new SubscriptionResult<T>();
+                            subscriptionResult.ProcessSucessful = false;
+                            subscriptionResult.Payload = deserializedObject;
+
+                            item.OnNext(subscriptionResult);
+                            
+                            if (subscriptionResult.ProcessSucessful)
+                            {
+                                if (this._deleteOnAcknowledge)
                                 {
-                                    if (this._deleteOnAcknowledge)
-                                    {
-                                        await this.AcknowledgeAndDelete()
-                                            .ConfigureAwait(false);
-                                    }
-                                    else
-                                    {
-                                        await this.AcknowledgeWithoutDelete(
-                                                JsonSerializer.Serialize<T>(subscriptionResult.Payload), 
-                                                subscriptionResult.ProcessSucessful)
-                                            .ConfigureAwait(false);    
-                                    }
+                                    await this.AcknowledgeAndDelete()
+                                        .ConfigureAwait(false);
                                 }
-                                else 
+                                else
                                 {
                                     await this.AcknowledgeWithoutDelete(
                                             JsonSerializer.Serialize<T>(subscriptionResult.Payload), 
                                             subscriptionResult.ProcessSucessful)
-                                        .ConfigureAwait(false);
+                                        .ConfigureAwait(false);    
                                 }
                             }
-                            catch
+                            else 
                             {
-                                throw new InvalidOperationException($"Was not possible to process payload: {itemFromQueue.Payload}");
+                                await this.AcknowledgeWithoutDelete(
+                                        JsonSerializer.Serialize<T>(subscriptionResult.Payload), 
+                                        subscriptionResult.ProcessSucessful)
+                                    .ConfigureAwait(false);
                             }
                         }
-
+                        catch
+                        {
+                            throw new InvalidOperationException($"Was not possible to process payload: {itemFromQueue.Payload}");
+                        }
                     });
                 token.Register(() => disposable.Dispose());
 
@@ -194,13 +209,22 @@ namespace MongoDbQueueService
             string workerName, 
             bool deleteOnAcknowledge = false)
         {
-            var client = new MongoClient(url);
-            this._database = client.GetDatabase(database);
+            this._mongoClient = new MongoClient(url);
+            this._database = this._mongoClient.GetDatabase(database);
             this._collection = collection;
             this._workerName = workerName;
             this._deleteOnAcknowledge = deleteOnAcknowledge;
 
             this._queueCollection = this._database.GetCollection<QueueCollection>(collection);
+
+            var lastTimeChangedIndex = Builders<QueueCollection>.IndexKeys.Ascending(x => x.LastTimeChanged);
+            this._queueCollection.Indexes.CreateOne(new CreateIndexModel<QueueCollection>(lastTimeChangedIndex));
+
+            var workerNameIndex = Builders<QueueCollection>.IndexKeys.Ascending(x => x.WorkerName);
+            this._queueCollection.Indexes.CreateOne(new CreateIndexModel<QueueCollection>(workerNameIndex));
+
+            var processedIndex = Builders<QueueCollection>.IndexKeys.Ascending(x => x.Processed);
+            this._queueCollection.Indexes.CreateOne(new CreateIndexModel<QueueCollection>(processedIndex));
         }
 
         private async Task AcknowledgeAndDelete()

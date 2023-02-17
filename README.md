@@ -11,7 +11,7 @@ Another goal of this project if to be able to set the full Application Life Cycl
 
 There are two available packages:
 * MongoDbQueueService
-* WorkerUtilitiesService
+* WorkerUtilitiesService (not yet developed)
 
 
 ## MongoDbQueueService

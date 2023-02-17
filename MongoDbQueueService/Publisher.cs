@@ -38,9 +38,9 @@ namespace MongoDbQueueService
 
             if (debug)
             {
-                Console.WriteLine($"--> connectionString: {publishSettings.ConnectionString}");
-                Console.WriteLine($"--> database: {publishSettings.Database}");
-                Console.WriteLine($"--> queue: {publishSettings.Queue}");
+                Console.WriteLine($"--> Publisher: connectionString: {publishSettings.ConnectionString}");
+                Console.WriteLine($"--> Publisher: database: {publishSettings.Database}");
+                Console.WriteLine($"--> Publisher: queue: {publishSettings.Queue}");
             }
 
             if (
@@ -48,7 +48,7 @@ namespace MongoDbQueueService
                 string.IsNullOrEmpty(publishSettings.Database) || 
                 string.IsNullOrEmpty(publishSettings.Queue))
             {
-                Console.WriteLine("Could not read properly the configuration file");
+                Console.WriteLine("Could not read properly the configuration file (Publisher)");
                 Console.WriteLine("=====================================================");
                 Console.WriteLine($"settingFolder -> {settingsFolder}");
 
@@ -106,6 +106,15 @@ namespace MongoDbQueueService
             this._openConnectionSemaphore = new Semaphore(
                 client.Settings.MaxConnectionPoolSize / 2, 
                 client.Settings.MaxConnectionPoolSize / 2);
+
+            var lastTimeChangedIndex = Builders<QueueCollection>.IndexKeys.Ascending(x => x.LastTimeChanged);
+            this._queueCollection.Indexes.CreateOne(new CreateIndexModel<QueueCollection>(lastTimeChangedIndex));
+
+            var workerNameIndex = Builders<QueueCollection>.IndexKeys.Ascending(x => x.WorkerName);
+            this._queueCollection.Indexes.CreateOne(new CreateIndexModel<QueueCollection>(workerNameIndex));
+
+            var processedIndex = Builders<QueueCollection>.IndexKeys.Ascending(x => x.Processed);
+            this._queueCollection.Indexes.CreateOne(new CreateIndexModel<QueueCollection>(processedIndex));
         }
 
         private async Task ThrottlingPipeline<T>(Func<Task> task)
