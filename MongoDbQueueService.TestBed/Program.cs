@@ -21,7 +21,7 @@ var settings = new SubscriberSettings
 var subscriber = new MongoDbQueueService.Subscriber(settings);
 */
 
-var subscriber = new MongoDbQueueService.Subscriber();
+var subscriber = new MongoDbQueueService.Subscriber(true);
 
 /*
 var publisher = new MongoDbQueueService.Publisher(
@@ -41,4 +41,4 @@ var publisherSettings = new PublisherSettings
 var publisher = new MongoDbQueueService.Publisher(publisherSettings);
 */
 
-var publisher = new MongoDbQueueService.Publisher();
+var publisher = new MongoDbQueueService.Publisher(true);

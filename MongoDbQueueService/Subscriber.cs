@@ -48,6 +48,7 @@ namespace MongoDbQueueService
                 Console.WriteLine($"--> Subscriber: database: {subscriberSettings.Database}");
                 Console.WriteLine($"--> Subscriber: queue: {subscriberSettings.Queue}");
                 Console.WriteLine($"--> Subscriber: worker: {subscriberSettings.WorkerName}");
+                Console.WriteLine($"--> DeleteOnAcknowledge: {subscriberSettings.DeleteOnAcknowledge}");
             }
 
             if (
@@ -70,7 +71,8 @@ namespace MongoDbQueueService
                 subscriberSettings.ConnectionString,
                 subscriberSettings.Database,
                 subscriberSettings.Queue,
-                subscriberSettings.WorkerName);
+                subscriberSettings.WorkerName,
+                subscriberSettings.DeleteOnAcknowledge);
         }
 
         public Subscriber(SubscriberSettings settings)
@@ -134,8 +136,7 @@ namespace MongoDbQueueService
                             var options = new FindOneAndUpdateOptions<QueueCollection>
                             {
                                 Sort = sortOptions, 
-                                ReturnDocument = ReturnDocument.After,
-                                Projection = Builders<QueueCollection>.Projection.Include(x => x.Id)
+                                ReturnDocument = ReturnDocument.After
                             };
 
                             var update = Builders<QueueCollection>.Update.Set(x => x.WorkerName, this._workerName);
